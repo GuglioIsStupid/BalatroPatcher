@@ -1,4 +1,6 @@
 import util.SteamPatcher as SteamPatcher
+import util.APKPatcher as ApkPatcher
+import util.PathPatcher as PathPatcher
 import sys, os
 
 def main(argv):
@@ -16,6 +18,13 @@ def main(argv):
             return
         
         apkPath = argv[2]
+    else:
+        if len(argv) < 3:
+            print("Usage: python main.py path <balatroPath>")
+            return
+
+        balatroPath = argv[2]
+        PathPatcher.Patch(balatroPath)
 
 if __name__ == "__main__":
     main(sys.argv)
