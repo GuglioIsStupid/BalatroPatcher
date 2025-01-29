@@ -1,0 +1,3 @@
+[submodule "smods"]
+	path = smods
+	url = https://github.com/Steamodded/smods.git
