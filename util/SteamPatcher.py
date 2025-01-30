@@ -11,6 +11,7 @@ luaAdditionStart = """
 local oldLoad = love.filesystem.load
 love.filesystem.load = function(path)
     if love.filesystem.getInfo("Patched/" .. path) then
+        print("Loading patched file: " .. path)
 		return oldLoad("Patched/" .. path)
 	end
     
@@ -19,6 +20,17 @@ love.filesystem.load = function(path)
     end
 
     return nil
+end
+
+local oldRequire = require
+
+function require(path)
+    if love.filesystem.getInfo("Patched/" .. path .. ".lua") then
+        print("Loading patched file: " .. path)
+        return oldLoad("Patched/" .. path .. ".lua")()
+    end
+
+    return oldRequire(path)
 end
 
 lovely = require("smods.lovely")
