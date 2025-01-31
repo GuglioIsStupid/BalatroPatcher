@@ -7,6 +7,20 @@ import zipfile
 gameID: str = "2379780"
 
 luaAdditionStart = """
+-- Clear Patched/ folder
+local function clearFolder(path)
+    for _, file in ipairs(love.filesystem.getDirectoryItems(path)) do
+        if love.filesystem.getInfo(path .. "/" .. file).type == "file" then
+            love.filesystem.remove(path .. "/" .. file)
+        else
+            clearFolder(path .. "/" .. file)
+            love.filesystem.remove(path .. "/" .. file)
+        end
+    end
+end
+
+clearFolder("Patched")
+
 -- call love function that loads file from save folder first
 local oldLoad = love.filesystem.load
 love.filesystem.load = function(path)
@@ -35,6 +49,15 @@ end
 
 lovely = require("smods.lovely")
 
+local localization = {}
+for _, file in ipairs(love.filesystem.getDirectoryItems("smods/localization/")) do
+    if file:match(".json$") then
+        local data = JSON.decode(love.filesystem.read("smods/localization/" .. file))
+        for k, v in pairs(data) do
+            localization[k] = v
+        end
+    end
+end
 """
 
 luaAdditionEnd = """
@@ -47,6 +70,34 @@ local function loadMods()
 end
 
 loadMods()
+
+local oldG = G or {}
+G = setmetatable({}, {
+    __index = function(t, k)
+        if k == "set_language" then
+            return function()
+                oldG:set_language()
+
+                local localization = love.filesystem.getInfo('smods/localization/'..G.SETTINGS.language..'.lua')
+                local data = nil
+                if localization then
+                    data = love.filesystem.load('smods/localization/'..G.SETTINGS.language..'.lua')()
+                end
+                setmetatable(G.localization, {
+                    __index = function(t, k)
+                        if localization then
+                            return data[k] or rawget(t, k) or k
+                        else
+                            return rawget(t, k) or k
+                        end
+                    end
+                })
+            end
+        end
+        return oldG[k] -- Reference oldG for other values
+    end
+})
+
 """
 
 def Patch():
